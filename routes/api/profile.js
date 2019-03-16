@@ -9,6 +9,8 @@ const User = require('../../models/User');
 
 // Load Profile validation module
 const validateProfileInput = require("../../validation/profile");
+const validateExperienceInput = require("../../validation/experience");
+const validateEducationInput = require("../../validation/education");
 
 const router = express.Router();
 
@@ -159,6 +161,144 @@ router.post(
             }
         } catch(err){
             res.status(500).json(err);
+        }
+    }
+);
+
+// @route   POST api/profile/experience
+// @desc    Add experience Profile
+// @access  Private
+router.post(
+    '/experience',
+    passport.authenticate('jwt', {session: false}),
+    async (req, res) => {
+        const {errors, isValid} = validateExperienceInput(req.body);
+
+        // Check validation
+        if(!isValid){
+            // Return any errors with 400 status
+            return res.status(400).json(errors);
+        }
+
+        try {
+            const profile = await Profile.findOne({user: req.user.id});
+            const newExp = {
+                title: req.body.title,
+                company: req.body.company,
+                location: req.body.location,
+                from: req.body.from,
+                to: req.body.to,
+                current: req.body.current,
+                description: req.body.description,
+            }
+
+            // Add experience array
+            profile.experience.unshift(newExp);
+            const updatedProfile = await profile.save();
+            res.json(updatedProfile);
+        } catch(err){
+            res.status(500).json({error: 'Internal server error'});
+        }
+    }
+);
+
+
+// @route   POST api/profile/education
+// @desc    Add education Profile
+// @access  Private
+router.post(
+    '/education',
+    passport.authenticate('jwt', {session: false}),
+    async (req, res) => {
+        const {errors, isValid} = validateEducationInput(req.body);
+
+        // Check validation
+        if(!isValid){
+            // Return any errors with 400 status
+            return res.status(400).json(errors);
+        }
+
+        try {
+            const profile = await Profile.findOne({user: req.user.id});
+            const newEdu = {
+                school: req.body.school,
+                degree: req.body.degree,
+                fieldofstudy: req.body.fieldofstudy,
+                from: req.body.from,
+                to: req.body.to,
+                current: req.body.current,
+                description: req.body.description,
+            }
+
+            // Add experience array
+            profile.education.unshift(newEdu);
+            const updatedProfile = await profile.save();
+            res.json(updatedProfile);
+        } catch(err){
+            res.status(500).json({error: 'Internal server error'});
+        }
+    }
+);
+
+// @route   DELETE api/profile/experiecne/:exp_id
+// @desc    Delete experience form Profile
+// @access  Private
+router.delete(
+    '/experience/:exp_id',
+    passport.authenticate('jwt', {session: false}),
+    async (req, res) => {
+        try{
+            const profile = await Profile.findOne({user: req.user.id});
+            const removeIndex = profile.experience
+                .map(item => item.id)
+                .indexOf(req.params.exp_id);
+
+            // Splice out of array
+            profile.experience.splice(removeIndex, 1);
+            const updatedProfile = await profile.save();
+            res.json(updatedProfile);
+        } catch(err){
+            res.status(400).json(err);
+        }
+    }
+);
+
+// @route   DELETE api/profile/education/:edu_id
+// @desc    Delete education form Profile
+// @access  Private
+router.delete(
+    '/education/:edu_id',
+    passport.authenticate('jwt', {session: false}),
+    async (req, res) => {
+        try{
+            const profile = await Profile.findOne({user: req.user.id});
+            const removeIndex = profile.education
+                .map(item => item.id)
+                .indexOf(req.params.edu_id);
+
+            // Splice out of array
+            profile.education.splice(removeIndex, 1);
+            const updatedProfile = await profile.save();
+            res.json(updatedProfile);
+        } catch(err){
+            res.status(400).json(err);
+        }
+    }
+);
+
+// @route   DELETE api/profile/
+// @desc    Delete education form Profile
+// @access  Private
+router.delete(
+    '/',
+    passport.authenticate('jwt', { session: false }),
+    async (req, res) => {
+        try{
+            await Profile.findOneAndDelete({ user: req.user.id });
+            await User.findOneAndDelete({ _id: req.user.id });
+            res.json({ success: true })
+        } catch(err){
+            res.status(400).json(err);
         }
     }
 );
