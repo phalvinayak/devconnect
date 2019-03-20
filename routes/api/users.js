@@ -63,7 +63,9 @@ router.post('/register', async (req, res) => {
                         throw err;
                     }
                     newUser.password = hash;
-                    const user = await newUser.save();
+                    let user = await newUser.save();
+                    user = user.toObject();
+                    ['_id', '_v', 'password'].forEach(key => delete user[key]);
                     res.json(user);
                 });
             });
@@ -127,7 +129,7 @@ router.post('/login', async (req, res) => {
                     );
                 } else {
                     errors.password = 'Incorrect password';
-                    res.json(errors)
+                    res.status(400).json(errors)
                 }
             });
     } catch(err){

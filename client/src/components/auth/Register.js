@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'
 import {withRouter} from 'react-router-dom';
 import {connect} from 'react-redux';
 import classnames from 'classname';
-import registerUser from '../../actions/authAction';
+import {registerUser} from '../../actions/authAction';
 
 class Register extends Component {
     constructor(){
@@ -14,6 +14,12 @@ class Register extends Component {
             email: '',
             password: '',
             password2: ''
+        }
+    }
+
+    componentDidMount(){
+        if(this.props.auth.isAuthenticated){
+            this.props.history.push('/dashboard');
         }
     }
 
